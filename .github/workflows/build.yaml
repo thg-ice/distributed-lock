@@ -1,0 +1,41 @@
+name: Build
+on:
+  push:
+    branches:
+      - "main"
+  pull_request: {}
+
+permissions: {}
+
+jobs:
+  build:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup go environment
+        uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Use golangci-lint
+        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
+        with:
+          version: v1.56.2
+          args: --print-issued-lines
+          # Avoid annoying 'file exists' errors - https://github.com/golangci/golangci-lint-action/issues/135
+          skip-pkg-cache: true
+
+      - name: Run tests
+        run: make test
+
+      - name: Generated files are up-to-date
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "Generated files are not up to date"
+            git status --porcelain
+            exit 1
+          fi

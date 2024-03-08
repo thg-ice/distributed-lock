@@ -1,0 +1,62 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    # Note grouped PRs is in beta and subject to change
+    # https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates#about-grouped-security-updates
+    groups:
+      minor-update:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      major-update:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+    labels:
+      - "skip changelog"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    # Note grouped PRs is in beta and subject to change
+    # https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates#about-grouped-security-updates
+    groups:
+      minor-update:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      major-update:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+    labels:
+      - "skip changelog"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    # Note grouped PRs is in beta and subject to change
+    # https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates#about-grouped-security-updates
+    groups:
+      minor-update:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+      major-update:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+    labels:
+      - "skip changelog"
+    schedule:
+      interval: "weekly"
