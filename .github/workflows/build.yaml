@@ -32,6 +32,9 @@ jobs:
       - name: Run tests
         run: make test
 
+      - name: Check licenses
+        run: make check-licenses
+
       - name: Generated files are up-to-date
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
