@@ -1,0 +1,67 @@
+run:
+  timeout: 30m
+  skip-files:
+    - "^zz_generated.*"
+issues:
+  exclude-rules:
+    # disable rules for test files
+    - path: _test\.go
+      linters:
+        - dogsled # because `_, _, _, err := foo(); assert.Error(t, err)` isn't unusual
+        - funlen # `func Test...` tend to be unavoidably long
+        - gocritic # numerous checks which aren't critical for test files
+        - lll # A number of tests have long strings that can't be split
+        - goconst # these are only test files
+linters-settings:
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 15
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  lll:
+    line-length: 140
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - wrapperFunc
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      - octalLiteral
+  funlen:
+    lines: 100
+    statements: 60
+
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - bodyclose
+    - dogsled
+    - errcheck
+    - funlen
+    - goconst
+    - gocritic
+    - gocyclo
+    - goimports
+    - revive
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - nakedret
+    - exportloopref
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace

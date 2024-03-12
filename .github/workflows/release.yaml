@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version number (v#.#.#)"
+        type: string
+        required: true
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Verify tests have succeeded before releasing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          successful=$(gh api --method GET repos/$GITHUB_REPOSITORY/actions/runs --field head_sha="${{ github.sha }}" --field status=success | jq --raw-output '.workflow_runs[].path')
+
+          echo "$successful"
+          if ! echo "$successful" | grep --quiet '^.github/workflows/build.yaml$'; then
+            echo "Tests have not passed successfully, release halted"
+            exit 1
+          fi
+
+      - name: Validate version
+        # grep pattern that works on both BSD grep & GNU grep
+        run: |
+          echo "${{ inputs.version }}" | grep '^v[0-9][0-9]*.[0-9][0-9]*.[0-9][0-9]*$'
+
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0
+          # We have to use credentials other than standard github-actions to give permission for the workflow to
+          # push directly to `main`
+          token: "${{ secrets.RELEASE_TOKEN }}"
+
+      - name: Batch .changes/unreleased into .changes/version.md
+        uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
+        with:
+          version: latest
+          args: "batch ${{ inputs.version }}"
+
+      - name: Update CHANGELOG.md
+        uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
+        with:
+          version: latest
+          args: merge
+
+      - name: Push changelog changes
+        uses: stefanzweifel/git-auto-commit-action@8756aa072ef5b4a080af5dc8fef36c5d586e521d # v5.0.0
+        with:
+          tagging_message: "${{ inputs.version }}"
+          commit_message: |
+            Update changelog for ${{ inputs.version }}
+
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      # Need write permission to create the release
+      contents: write
+    needs:
+      - changelog
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          # Default input is the SHA that initially triggered the workflow. As we created a new commit in the previous job,
+          # to ensure we get the correct commit
+          ref: "refs/tags/${{ inputs.version }}"
+
+      - name: Create release
+        env:
+          GITHUB_TOKEN: "${{ github.token }}"
+          VERSION: "${{ inputs.version }}"
+        run: |
+          gh release create --repo "$GITHUB_REPOSITORY" --title "${VERSION}" --verify-tag --notes-file ".changes/${VERSION}.md" "${VERSION}"

@@ -1,0 +1,31 @@
+name: Require change fragment
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      # On by default if you specify no types.
+      - "opened"
+      - "reopened"
+      - "synchronize"
+      # For `skip-label` only.
+      - "labeled"
+      - "unlabeled"
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - name: "Check for changelog entry"
+        uses: brettcannon/check-for-changed-files@4170644959a21843b31f1181f2a1761d65ef4791 # v1.2.0
+        with:
+          file-pattern: ".changes/unreleased/*.yaml"
+          skip-label: "skip changelog"
+          failure-message: "Missing a changelog file in ${file-pattern}; please add one or apply the ${skip-label} label to the pull request"
+          token: "${{ github.token }}"
