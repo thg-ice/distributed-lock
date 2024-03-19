@@ -23,7 +23,8 @@ jobs:
       contents: read
     steps:
       - name: "Check for changelog entry"
-        uses: brettcannon/check-for-changed-files@4170644959a21843b31f1181f2a1761d65ef4791 # v1.2.0
+        # TODO use a released version when a new tag is created
+        uses: brettcannon/check-for-changed-files@1d976b36a566141b41cdafbbc63a89eb54ec8a8a # main
         with:
           file-pattern: ".changes/unreleased/*.yaml"
           skip-label: "skip changelog"
