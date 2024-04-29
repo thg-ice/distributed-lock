@@ -26,8 +26,6 @@ jobs:
         with:
           version: v1.56.2
           args: --print-issued-lines
-          # Avoid annoying 'file exists' errors - https://github.com/golangci/golangci-lint-action/issues/135
-          skip-pkg-cache: true
 
       - name: Run tests
         run: make test
