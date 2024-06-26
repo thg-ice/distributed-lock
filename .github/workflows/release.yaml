@@ -42,13 +42,13 @@ jobs:
       - name: Batch .changes/unreleased into .changes/version.md
         uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
         with:
-          version: v1.19.0
+          version: v1.19.1
           args: "batch ${{ inputs.version }}"
 
       - name: Update CHANGELOG.md
         uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
         with:
-          version: v1.19.0
+          version: v1.19.1
           args: merge
 
       - name: Push changelog changes
