@@ -1,0 +1,56 @@
+name: Update major Go dependency versions
+# https://github.com/golang/go/issues/40323
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 3 * * 1-5
+
+jobs:
+  go-major-dep-update:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+        with:
+          token: "${{ secrets.RELEASE_TOKEN }}"
+
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+
+      - run: go install github.com/icholy/gomajor@v0.11.0
+
+      - run: |
+          {
+            echo 'new<<_GitHubActionsFileCommandDelimiter_'
+            gomajor list -major -json | jq --slurp --raw-output '[.[].Latest.Path] | join("\n * ")'
+            echo '_GitHubActionsFileCommandDelimiter_'
+          } >> $GITHUB_OUTPUT
+        id: deps
+
+      - run: gomajor get -major all
+
+      - run: go mod tidy
+
+      - run: echo "sum=$(md5sum ./go.mod | awk '{print $1}')" >> $GITHUB_OUTPUT
+        id: sum
+
+      - name: Push changes
+        uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.0.1
+        id: commit
+        with:
+          create_branch: true
+          branch: "major-go-dep-update-${{ steps.sum.outputs.sum }}"
+          commit_message: |
+            Update major Go dependency versions
+
+            Update major version for:
+
+             * ${{ steps.deps.outputs.new }}
+
+      - name: Raise PR and close any old ones
+        if: steps.commit.outputs.changes_detected == 'true'
+        env:
+          GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
+          GH_REPO: "${{ github.repository }}"
+        run: .github/raise-pr.sh "Update major Go dependency versions"

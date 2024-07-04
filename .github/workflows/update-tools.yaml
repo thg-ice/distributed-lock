@@ -41,16 +41,5 @@ jobs:
         if: steps.commit.outputs.changes_detected == 'true'
         env:
           GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
-          REPO: "${{ github.repository }}"
-        run: |
-          currentUser=$(gh api user | jq -r '.login')
-
-          existing=$(gh pr list --repo "${REPO}" --search "'Update changie' author:$currentUser state:open" --json number)
-
-          gh pr create --repo "${REPO}" --fill-first --label "skip changelog"
-
-          currentPr=$(gh pr view --json number | jq '.number')
-
-          echo "$existing" | jq -r '.[].number' | xargs -I % -n 1 gh pr close % --repo "${REPO}" --comment "Superseded by #${currentPr}" --delete-branch
-
-          echo "PR https://github.com/${REPO}/pull/${currentPr} raised" >> $GITHUB_STEP_SUMMARY
+          GH_REPO: "${{ github.repository }}"
+        run: .github/raise-pr.sh "Update changie"
