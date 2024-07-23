@@ -41,5 +41,5 @@ jobs:
         if: steps.commit.outputs.changes_detected == 'true'
         env:
           GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
-          GH_REPO: "${{ github.repository }}"
-        run: .github/raise-pr.sh "Update changie"
+          PREFIX: "Update changie"
+        run: .github/raise-pr.sh

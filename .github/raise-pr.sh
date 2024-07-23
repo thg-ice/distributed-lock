@@ -13,12 +13,10 @@ set -o pipefail
 # Turn on traces, useful while debugging but commented out by default
 #set -o xtrace
 
-prefix="${1}"
-
 currentUser=$(gh api user | jq -r '.login')
 
 existing=$(gh pr list --search "author:$currentUser state:open" --json title,number | \
-  jq --arg t "$prefix" --raw-output '.[] | select(.title | contains($t)) | .number')
+  jq --arg t "$PREFIX" --raw-output '[.[] | select(.title | contains($t))]')
 
 gh pr create --fill-first --label "skip changelog"
 
@@ -26,4 +24,4 @@ currentPr=$(gh pr view --json number | jq '.number')
 
 echo "$existing" | jq -r '.[].number' | xargs -I % -n 1 gh pr close % --comment "Superseded by #${currentPr}" --delete-branch
 
-echo "PR https://github.com/${GH_REPO}/pull/${currentPr} raised" >> "$GITHUB_STEP_SUMMARY"
+echo "PR $(gh pr view --json url --template '{{ .url }}') raised" >> "$GITHUB_STEP_SUMMARY"
