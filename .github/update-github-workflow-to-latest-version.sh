@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# This script updates the version of changie being downloaded by the miniscruff/changie-action action
+# This script updates the field of an action within .github/workflows, typically used to bump version numbers`
 
 # Exit on error. Append || true if you expect an error.
 set -o errexit
@@ -13,11 +13,9 @@ set -o pipefail
 # Turn on traces, useful while debugging but commented out by default
 #set -o xtrace
 
-newVer=${1}
-
 while IFS= read -r -d '' file
 do
-  patch="$(diff -U0 -w -b --ignore-blank-lines "$file" <(VER="${newVer}" yq eval '(.jobs[].steps[] | select(.uses | match("miniscruff/changie-action@[\S]{2,40}")) | .with.version) = env(VER)' "$file") || true)"
+  patch="$(diff -U0 -w -b --ignore-blank-lines "$file" <(yq eval '(.jobs[].steps[] | select(.uses | match(env(ACTION) + "@[a-z0-9]{2,40}")) | select(.with | has(env(FIELD))) | .with[env(FIELD)]) = env(VALUE)' "$file") || true)"
   if [ "$patch" != "" ]; then
     patch "$file" <<< "$patch"
   fi
