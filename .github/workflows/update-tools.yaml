@@ -5,8 +5,19 @@ on:
     - cron: 0 3 * * 1-5
 
 jobs:
-  changie:
+  workflow-tools:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        value:
+          - repo: "miniscruff/changie"
+            name: "changie"
+            action: "miniscruff/changie-action"
+            field: "version"
+          - repo: "golangci/golangci-lint"
+            name: "golangci-lint"
+            action: "golangci/golangci-lint-action"
+            field: "version"
     permissions: {}
     steps:
       - name: Checkout
@@ -16,30 +27,36 @@ jobs:
 
       - name: Get latest version
         id: latest
+        env:
+          GH_REPO: "${{ matrix.value.repo }}"
         run: |
-          echo 'output<<_GitHubActionsFileCommandDelimiter_' >> $GITHUB_OUTPUT
-          curl --silent --fail-with-body https://api.github.com/repos/miniscruff/changie/releases | jq --raw-output '[.[].tag_name | select(contains("-") | not)] | max_by( ltrimstr("v") | split(".") | map(tonumber) )' >> $GITHUB_OUTPUT
-          echo '_GitHubActionsFileCommandDelimiter_' >> $GITHUB_OUTPUT
+          {
+            echo 'output<<_GitHubActionsFileCommandDelimiter_'
+          curl --silent --fail-with-body "https://api.github.com/repos/${GH_REPO}/releases" | jq --raw-output '[.[].tag_name | select(contains("-") | not)] | max_by( ltrimstr("v") | split(".") | map(tonumber) )'
+            echo '_GitHubActionsFileCommandDelimiter_'
+          } >> "$GITHUB_OUTPUT"
 
       - name: Update GitHub workflows
         env:
-          VER: ${{ steps.latest.outputs.output }}
-        run: ./.github/update-changie-to-latest-version.sh "$VER"
+          ACTION: ${{ matrix.value.action }}
+          FIELD: ${{ matrix.value.field }}
+          VALUE: ${{ steps.latest.outputs.output }}
+        run: ./.github/update-github-workflow-to-latest-version.sh
 
       - name: Push changes
         uses: stefanzweifel/git-auto-commit-action@8621497c8c39c72f3e2a999a26b4ca1b5058a842 # v5.0.1
         id: commit
         with:
           create_branch: true
-          branch: "changie-${{ steps.latest.outputs.output }}"
+          branch: "${{ matrix.value.name }}-${{ steps.latest.outputs.output }}"
           commit_message: |
-            Update changie to ${{ steps.latest.outputs.output }}
+            Update ${{ matrix.value.name }} to ${{ steps.latest.outputs.output }}
 
-            Update the changie version to [${{ steps.latest.outputs.output }}](https://github.com/miniscruff/changie/releases/tag/${{ steps.latest.outputs.output }})
+            Update the ${{ matrix.value.name }} version to [${{ steps.latest.outputs.output }}](https://github.com/${{ matrix.value.repo }}/releases/tag/${{ steps.latest.outputs.output }})
 
       - name: Raise PR and close any old ones
         if: steps.commit.outputs.changes_detected == 'true'
         env:
           GITHUB_TOKEN: "${{ secrets.RELEASE_TOKEN }}"
-          PREFIX: "Update changie"
+          PREFIX: "Update ${{ matrix.value.name }}"
         run: .github/raise-pr.sh
