@@ -33,9 +33,11 @@ type Lock struct {
 	ttl      time.Duration
 	logger   func(ctx context.Context) Logger
 
-	mutex                    sync.Mutex
-	refreshMetadata          bool
-	refreshFailures          uint
+	mutex           sync.Mutex
+	refreshMetadata bool
+	refreshFailures uint
+
+	latestGeneration         int64
 	latestMetadataGeneration int64
 }
 
@@ -48,7 +50,7 @@ func NewLock(bucket *storage.BucketHandle, id, path string, ttl time.Duration, l
 		logger:                   logContext,
 		mutex:                    sync.Mutex{},
 		refreshMetadata:          false,
-		latestMetadataGeneration: 0,
+		latestMetadataGeneration: 1,
 	}
 }
 
@@ -109,7 +111,9 @@ func (l *Lock) RefreshLock(ctx context.Context) error {
 	l.logger(ctx).Info("Refreshing lock", "path", l.path)
 
 	attrs, err := l.bucket.Object(l.path).
-		If(storage.Conditions{MetagenerationMatch: l.latestMetadataGeneration}).
+		If(storage.Conditions{
+			GenerationMatch:     l.latestGeneration,
+			MetagenerationMatch: l.latestMetadataGeneration}).
 		Update(ctx, storage.ObjectAttrsToUpdate{Metadata: l.metadata()})
 	if err != nil {
 		var gErr *googleapi.Error
@@ -128,6 +132,7 @@ func (l *Lock) RefreshLock(ctx context.Context) error {
 
 	l.refreshFailures = 0
 	l.latestMetadataGeneration = attrs.Metageneration
+	l.latestGeneration = attrs.Generation
 	return nil
 }
 
@@ -177,7 +182,7 @@ func (l *Lock) createLock(ctx context.Context) error {
 
 	l.refreshMetadata = true
 	l.latestMetadataGeneration = attrs.Metageneration
-
+	l.latestGeneration = attrs.Generation
 	return nil
 }
 
