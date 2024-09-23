@@ -186,7 +186,7 @@ func (l *Lock) createLock(ctx context.Context) error {
 	return nil
 }
 
-func (l *Lock) deleteLock(ctx context.Context, generation *int64, metageneration *int64, confirmOwner bool) error {
+func (l *Lock) deleteLock(ctx context.Context, generation, metageneration *int64, confirmOwner bool) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
