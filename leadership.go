@@ -50,7 +50,7 @@ func NewLock(bucket *storage.BucketHandle, id, path string, ttl time.Duration, l
 		logger:                   logContext,
 		mutex:                    sync.Mutex{},
 		refreshMetadata:          false,
-		latestMetadataGeneration: 1,
+		latestMetadataGeneration: 0,
 	}
 }
 
@@ -132,7 +132,6 @@ func (l *Lock) RefreshLock(ctx context.Context) error {
 
 	l.refreshFailures = 0
 	l.latestMetadataGeneration = attrs.Metageneration
-	l.latestGeneration = attrs.Generation
 	return nil
 }
 
