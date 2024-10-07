@@ -33,9 +33,11 @@ type Lock struct {
 	ttl      time.Duration
 	logger   func(ctx context.Context) Logger
 
-	mutex                    sync.Mutex
-	refreshMetadata          bool
-	refreshFailures          uint
+	mutex           sync.Mutex
+	refreshMetadata bool
+	refreshFailures uint
+
+	latestGeneration         int64
 	latestMetadataGeneration int64
 }
 
@@ -90,7 +92,7 @@ func (l *Lock) Lock(ctx context.Context, timeout time.Duration) error {
 
 // Unlock will attempt to release the acquired lock.
 func (l *Lock) Unlock(ctx context.Context) error {
-	return l.deleteLock(ctx, nil, true)
+	return l.deleteLock(ctx, nil, nil, true)
 }
 
 // RefreshLock will update the information on the lock to ensure that the client still owns it. If ErrLockAbandoned is
@@ -109,7 +111,9 @@ func (l *Lock) RefreshLock(ctx context.Context) error {
 	l.logger(ctx).Info("Refreshing lock", "path", l.path)
 
 	attrs, err := l.bucket.Object(l.path).
-		If(storage.Conditions{MetagenerationMatch: l.latestMetadataGeneration}).
+		If(storage.Conditions{
+			GenerationMatch:     l.latestGeneration,
+			MetagenerationMatch: l.latestMetadataGeneration}).
 		Update(ctx, storage.ObjectAttrsToUpdate{Metadata: l.metadata()})
 	if err != nil {
 		var gErr *googleapi.Error
@@ -138,7 +142,7 @@ func (l *Lock) deleteLockIfStale(ctx context.Context) error {
 	}
 
 	if attrs.Metadata[ownerMetadata] == l.identity {
-		if err := l.deleteLock(ctx, &attrs.Metageneration, false); err != nil {
+		if err := l.deleteLock(ctx, &attrs.Generation, &attrs.Metageneration, false); err != nil {
 			return err
 		}
 	}
@@ -150,7 +154,7 @@ func (l *Lock) deleteLockIfStale(ctx context.Context) error {
 			values = append(values, "err", err)
 		}
 		l.logger(ctx).Info("Lock expired", values...)
-		return l.deleteLock(ctx, &attrs.Metageneration, false)
+		return l.deleteLock(ctx, &attrs.Generation, &attrs.Metageneration, false)
 	}
 
 	return nil
@@ -177,11 +181,11 @@ func (l *Lock) createLock(ctx context.Context) error {
 
 	l.refreshMetadata = true
 	l.latestMetadataGeneration = attrs.Metageneration
-
+	l.latestGeneration = attrs.Generation
 	return nil
 }
 
-func (l *Lock) deleteLock(ctx context.Context, metageneration *int64, confirmOwner bool) error {
+func (l *Lock) deleteLock(ctx context.Context, generation, metageneration *int64, confirmOwner bool) error {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
 
@@ -203,12 +207,16 @@ func (l *Lock) deleteLock(ctx context.Context, metageneration *int64, confirmOwn
 
 	l.refreshMetadata = false
 
+	g := l.latestGeneration
+	if generation != nil {
+		g = *generation
+	}
 	m := l.latestMetadataGeneration
 	if metageneration != nil {
 		m = *metageneration
 	}
 
-	if err := l.bucket.Object(l.path).If(storage.Conditions{MetagenerationMatch: m}).Delete(ctx); err != nil {
+	if err := l.bucket.Object(l.path).If(storage.Conditions{GenerationMatch: g, MetagenerationMatch: m}).Delete(ctx); err != nil {
 		var gErr *googleapi.Error
 		if errors.Is(err, storage.ErrObjectNotExist) || (errors.As(err, &gErr) && gErr.Code == http.StatusPreconditionFailed) {
 			// TODO what could a caller do if they get StatusPreconditionFailed?

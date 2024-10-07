@@ -274,6 +274,8 @@ func TestLock_RefreshLock(t *testing.T) {
 			}
 
 			assert.Equal(t, test.expectedMetageneration, updated.Metageneration)
+			assert.NotZero(t, updated.Generation)
+
 			assert.Equal(t, "id", updated.Metadata[ownerMetadata])
 
 			if test.expectedTTLUpdated {
