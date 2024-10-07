@@ -1,3 +1,0 @@
-kind: Changed
-body: The lock now utilises both Generation and Metageneration fields
-time: 2024-09-23T14:12:48.012628+01:00
