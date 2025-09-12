@@ -40,13 +40,13 @@ jobs:
           token: "${{ secrets.RELEASE_TOKEN }}"
 
       - name: Batch .changes/unreleased into .changes/version.md
-        uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
+        uses: miniscruff/changie-action@5036dffa79ffc007110dc7f75eca7ef72780e147 # v2.1.0
         with:
           version: v1.21.0
           args: "batch ${{ inputs.version }}"
 
       - name: Update CHANGELOG.md
-        uses: miniscruff/changie-action@6dcc2533cac0495148ed4046c438487e4dceaa23 # v2.0.0
+        uses: miniscruff/changie-action@5036dffa79ffc007110dc7f75eca7ef72780e147 # v2.1.0
         with:
           version: v1.21.0
           args: merge
