@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	// ErrLockAbandoned is returned when the lock has been lost and the client should stop immediately.
 	ErrLockAbandoned          = errors.New("lock abandoned")
 	errLockOwnedBySomeoneElse = errors.New("unable to delete lock owned by someone else")
 )
@@ -41,6 +42,7 @@ type Lock struct {
 	latestMetadataGeneration int64
 }
 
+// NewLock creates a new distributed lock instance backed by Google Cloud Storage.
 func NewLock(bucket *storage.BucketHandle, id, path string, ttl time.Duration, logContext func(context.Context) Logger) *Lock {
 	return &Lock{
 		bucket:                   bucket,
@@ -54,6 +56,7 @@ func NewLock(bucket *storage.BucketHandle, id, path string, ttl time.Duration, l
 	}
 }
 
+// Logger defines the interface for logging within the lock implementation.
 type Logger interface {
 	Info(msg string, keysAndValues ...any)
 	Error(err error, msg string, keysAndValues ...any)

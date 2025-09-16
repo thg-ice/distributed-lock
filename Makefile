@@ -34,7 +34,7 @@ vet: ## Run go vet against code.
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint against code.
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run --output.text.print-issued-lines
 
 .PHONY: check-licenses
 check-licenses: go-licenses ## Verify dependencies only have allowed licenses
