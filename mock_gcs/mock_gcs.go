@@ -301,7 +301,7 @@ func (s *Server) deleteObject(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	if s.failOnObjectExistence {
 		if !query.Has("ifMetagenerationMatch") {
-			http.Error(w, "deleteObject missing ifGenerationMatch", 501)
+			http.Error(w, "deleteObject missing ifGenerationMatch", http.StatusNotImplemented)
 			return
 		}
 	}
