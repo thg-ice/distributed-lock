@@ -1,4 +1,4 @@
-package mock_gcs // nolint:revive,stylecheck // Nothing wrong with underscore in a name
+package mock_gcs // nolint:revive // Nothing wrong with underscore in a name
 
 import (
 	"context"

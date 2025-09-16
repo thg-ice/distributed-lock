@@ -24,8 +24,8 @@ jobs:
       - name: Use golangci-lint
         uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8 # v6.1.1
         with:
-          version: v1.61.0
-          args: --print-issued-lines
+          version: v2.4.0
+          args: --output.text.print-issued-lines
 
       - name: Run tests
         run: make test

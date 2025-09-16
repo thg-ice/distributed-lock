@@ -1,4 +1,4 @@
-package mock_gcs // nolint:revive,stylecheck // Nothing wrong with underscore in a name
+package mock_gcs // nolint:revive // Nothing wrong with underscore in a name
 
 import (
 	"context"
@@ -17,6 +17,7 @@ import (
 	v1 "google.golang.org/api/storage/v1"
 )
 
+// Server is a mock Google Cloud Storage server for testing.
 type Server struct {
 	m      sync.Mutex
 	data   map[string]*v1.Object
@@ -27,20 +28,24 @@ type Server struct {
 	failOnObjectName      *string
 }
 
+// Opt is a function type for configuring the mock server.
 type Opt func(*Server)
 
+// WithFailOnObjectExistence configures the server to fail when objects already exist.
 func WithFailOnObjectExistence() Opt {
 	return func(s *Server) {
 		s.failOnObjectExistence = true
 	}
 }
 
+// WithFailOnObjectName configures the server to fail on operations with the specified object name.
 func WithFailOnObjectName(name string) Opt {
 	return func(s *Server) {
 		s.failOnObjectName = &name
 	}
 }
 
+// NewServer creates a new mock Google Cloud Storage server.
 func NewServer(bucket string, opts ...Opt) *Server {
 	server := &Server{
 		m:                     sync.Mutex{},
@@ -66,16 +71,19 @@ func NewServer(bucket string, opts ...Opt) *Server {
 	return server
 }
 
+// Close shuts down the mock server.
 func (s *Server) Close() {
 	s.server.Close()
 }
 
+// Client returns a Google Cloud Storage client configured to use this mock server.
 func (s *Server) Client(ctx context.Context) (*storage.Client, error) {
 	s.server.StartTLS()
 
 	return storage.NewClient(ctx, option.WithHTTPClient(s.server.Client()), option.WithoutAuthentication(), option.WithEndpoint(s.server.URL))
 }
 
+// Add adds an object to the mock server's storage.
 func (s *Server) Add(name string, attrs storage.ObjectAttrs) { // nolint:gocritic
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -92,6 +100,7 @@ func (s *Server) Add(name string, attrs storage.ObjectAttrs) { // nolint:gocriti
 	}
 }
 
+// Get retrieves an object's attributes from the mock server's storage.
 func (s *Server) Get(name string) *storage.ObjectAttrs {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -111,6 +120,7 @@ func (s *Server) Get(name string) *storage.ObjectAttrs {
 	}
 }
 
+// RemoveAll removes all objects from the mock server's storage.
 func (s *Server) RemoveAll() {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -118,7 +128,6 @@ func (s *Server) RemoveAll() {
 	s.data = map[string]*v1.Object{}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) validateRequest(next func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.PathValue("bucket") != s.bucket {
@@ -149,7 +158,6 @@ func (s *Server) listObjects(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) createObject(w http.ResponseWriter, r *http.Request) {
 	_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
@@ -175,19 +183,19 @@ func (s *Server) createObject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if objectAttrs.Name == "" {
-		http.Error(w, "createObject missing name", 501)
+		http.Error(w, "createObject missing name", http.StatusNotImplemented)
 		return
 	}
 
 	if s.failOnObjectName != nil && objectAttrs.Name == *s.failOnObjectName {
-		http.Error(w, "createObject failed on name", 418)
+		http.Error(w, "createObject failed on name", http.StatusTeapot)
 		return
 	}
 
 	if s.failOnObjectExistence {
 		query := r.URL.Query()
 		if !query.Has("ifGenerationMatch") || query.Get("ifGenerationMatch") != "0" {
-			http.Error(w, "createObject missing ifGenerationMatch", 501)
+			http.Error(w, "createObject missing ifGenerationMatch", http.StatusNotImplemented)
 			return
 		}
 
@@ -236,18 +244,17 @@ func (s *Server) readObject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) updateObject(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("object")
 
 	if s.failOnObjectName != nil && name == *s.failOnObjectName {
-		http.Error(w, "updateObject failed on name", 418)
+		http.Error(w, "updateObject failed on name", http.StatusTeapot)
 		return
 	}
 
 	query := r.URL.Query()
 	if !query.Has("ifMetagenerationMatch") {
-		http.Error(w, "updateObject missing ifGenerationMatch", 501)
+		http.Error(w, "updateObject missing ifGenerationMatch", http.StatusNotImplemented)
 		return
 	}
 
@@ -280,12 +287,11 @@ func (s *Server) updateObject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) deleteObject(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("object")
 
 	if s.failOnObjectName != nil && name == *s.failOnObjectName {
-		http.Error(w, "deleteObject failed on name", 418)
+		http.Error(w, "deleteObject failed on name", http.StatusTeapot)
 		return
 	}
 
@@ -295,7 +301,7 @@ func (s *Server) deleteObject(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	if s.failOnObjectExistence {
 		if !query.Has("ifMetagenerationMatch") {
-			http.Error(w, "deleteObject missing ifGenerationMatch", 501)
+			http.Error(w, "deleteObject missing ifGenerationMatch", http.StatusNotImplemented)
 			return
 		}
 	}
