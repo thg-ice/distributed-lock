@@ -1,4 +1,4 @@
-package mock_gcs // nolint:revive,stylecheck // Nothing wrong with underscore in a name
+package mock_gcs // nolint:revive // Nothing wrong with underscore in a name
 
 import (
 	"context"
@@ -118,7 +118,6 @@ func (s *Server) RemoveAll() {
 	s.data = map[string]*v1.Object{}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) validateRequest(next func(http.ResponseWriter, *http.Request)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.PathValue("bucket") != s.bucket {
@@ -149,7 +148,6 @@ func (s *Server) listObjects(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) createObject(w http.ResponseWriter, r *http.Request) {
 	_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
@@ -236,7 +234,6 @@ func (s *Server) readObject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) updateObject(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("object")
 
@@ -280,7 +277,6 @@ func (s *Server) updateObject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// nolint:stylecheck // random numbers used to aid debugging
 func (s *Server) deleteObject(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("object")
 
