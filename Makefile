@@ -34,7 +34,7 @@ vet: ## Run go vet against code.
 
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint against code.
-	$(GOLANGCI_LINT) run
+	$(GOLANGCI_LINT) run --output.text.print-issued-lines
 
 .PHONY: check-licenses
 check-licenses: go-licenses ## Verify dependencies only have allowed licenses
@@ -65,13 +65,13 @@ GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 GO_LICENSES = $(LOCALBIN)/go-licenses-$(GO_LICENSES_VERSION)
 
 ## Tool Versions
-GOLANGCI_LINT_VERSION ?= v1.56.2
+GOLANGCI_LINT_VERSION ?= v2.4.0
 GO_LICENSES_VERSION ?= v1.6.0
 
 .PHONY: golangci-lint
 golangci-lint: $(GOLANGCI_LINT) ## Download golangci-lint locally if necessary.
 $(GOLANGCI_LINT): $(LOCALBIN)
-	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
+	$(call go-install-tool,$(GOLANGCI_LINT),github.com/golangci/golangci-lint/v2/cmd/golangci-lint,${GOLANGCI_LINT_VERSION})
 
 .PHONY: go-licenses
 go-licenses: $(GO_LICENSES) ## Download go-licenses locally if necessary.
