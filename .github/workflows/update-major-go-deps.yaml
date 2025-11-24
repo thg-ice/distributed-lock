@@ -16,7 +16,7 @@ jobs:
         with:
           token: "${{ secrets.RELEASE_TOKEN }}"
 
-      - uses: actions/setup-go@41dfa10bad2bb2ae585af6ee5bb4d7d973ad74ed # v5.1.0
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version-file: "go.mod"
 
