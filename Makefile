@@ -45,7 +45,7 @@ check-licenses: go-licenses ## Verify dependencies only have allowed licenses
 .PHONY: test
 test: ## Run tests.
 	go generate ./...
-	go run gotest.tools/gotestsum@v1.11.0 --jsonfile bin/test.out -- -count=1 ./... -cover -coverpkg=./... -coverprofile bin/coverage.out
+	go run gotest.tools/gotestsum@v1.13.0 --jsonfile bin/test.out -- -count=1 ./... -cover -coverpkg=./... -coverprofile bin/coverage.out
 
 ##@ Coverage
 
@@ -65,7 +65,7 @@ GOLANGCI_LINT = $(LOCALBIN)/golangci-lint-$(GOLANGCI_LINT_VERSION)
 GO_LICENSES = $(LOCALBIN)/go-licenses-$(GO_LICENSES_VERSION)
 
 ## Tool Versions
-GOLANGCI_LINT_VERSION ?= v2.4.0
+GOLANGCI_LINT_VERSION ?= v2.14.0
 GO_LICENSES_VERSION ?= v1.6.0
 
 .PHONY: golangci-lint

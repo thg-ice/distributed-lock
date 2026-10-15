@@ -17,6 +17,9 @@ import (
 	v1 "google.golang.org/api/storage/v1"
 )
 
+// objectKind is the kind GCS reports for every object resource.
+const objectKind = "storage#object"
+
 // Server is a mock Google Cloud Storage server for testing.
 type Server struct {
 	m      sync.Mutex
@@ -90,7 +93,7 @@ func (s *Server) Add(name string, attrs storage.ObjectAttrs) { // nolint:gocriti
 
 	s.data[name] = &v1.Object{
 		Id:             name,
-		Kind:           "storage#object",
+		Kind:           objectKind,
 		Metadata:       attrs.Metadata,
 		Metageneration: attrs.Metageneration,
 		Name:           name,
@@ -176,7 +179,7 @@ func (s *Server) createObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var objectAttrs storage.ObjectAttrs
+	var objectAttrs v1.Object
 	if err := json.NewDecoder(jsonPart).Decode(&objectAttrs); err != nil {
 		http.Error(w, fmt.Sprintf("createObject failed to read body: %s", err), 599)
 		return
@@ -208,7 +211,7 @@ func (s *Server) createObject(w http.ResponseWriter, r *http.Request) {
 	object := v1.Object{
 		Generation:     1,
 		Id:             "doo",
-		Kind:           "storage#object",
+		Kind:           objectKind,
 		Metadata:       objectAttrs.Metadata,
 		Metageneration: 1,
 		Name:           objectAttrs.Name,
@@ -272,7 +275,7 @@ func (s *Server) updateObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var objectAttrs storage.ObjectAttrs
+	var objectAttrs v1.Object
 	if err := json.NewDecoder(r.Body).Decode(&objectAttrs); err != nil {
 		http.Error(w, fmt.Sprintf("createObject failed to read body: %s", err), 599)
 		return
