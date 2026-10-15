@@ -45,7 +45,7 @@ check-licenses: go-licenses ## Verify dependencies only have allowed licenses
 .PHONY: test
 test: ## Run tests.
 	go generate ./...
-	go run gotest.tools/gotestsum@v1.11.0 --jsonfile bin/test.out -- -count=1 ./... -cover -coverpkg=./... -coverprofile bin/coverage.out
+	go run gotest.tools/gotestsum@v1.13.0 --jsonfile bin/test.out -- -count=1 ./... -cover -coverpkg=./... -coverprofile bin/coverage.out
 
 ##@ Coverage
 
