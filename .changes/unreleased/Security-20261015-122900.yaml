@@ -1,0 +1,3 @@
+kind: Security
+body: 'Update all Go dependencies (golang.org/x/crypto, x/net, x/oauth2, x/text, x/sys, google.golang.org/grpc, go.opentelemetry.io/otel/sdk) and raise the minimum Go version to 1.26 (Aikido findings); fix a template injection in the release workflow'
+time: 2026-10-15T12:29:00.000000+05:30

@@ -176,7 +176,7 @@ func (s *Server) createObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var objectAttrs storage.ObjectAttrs
+	var objectAttrs v1.Object
 	if err := json.NewDecoder(jsonPart).Decode(&objectAttrs); err != nil {
 		http.Error(w, fmt.Sprintf("createObject failed to read body: %s", err), 599)
 		return
@@ -272,7 +272,7 @@ func (s *Server) updateObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var objectAttrs storage.ObjectAttrs
+	var objectAttrs v1.Object
 	if err := json.NewDecoder(r.Body).Decode(&objectAttrs); err != nil {
 		http.Error(w, fmt.Sprintf("createObject failed to read body: %s", err), 599)
 		return
